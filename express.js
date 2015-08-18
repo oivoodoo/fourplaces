@@ -7,7 +7,6 @@ var express = require('express'),
 var db = require('./db');
 db.connect();
 
-var Location = require('./models').Location;
 var User = require('./models').User;
 
 var app = express();
@@ -54,7 +53,8 @@ app.get('/checkin', function(request, response, next) {
 
   user.createLocation({
     lng: params.lng,
-    ltd: params.ltd
+    ltd: params.ltd,
+    name: params.name
   }, function(err) {
     if (err) {
       console.log(err);

@@ -22,6 +22,7 @@ describe('GET /checkins for creating location and user entries', function(){
       .get('/checkin')
       .query({
         username: 'kate',
+        name: "Cafe de Paris",
         ltd: '1.1',
         lng: '2.2'
       })
@@ -50,6 +51,7 @@ describe('GET /checkins for creating location and user entries', function(){
       .get('/checkin')
       .query({
         username: 'kate',
+        name: "Cafe de Paris",
         ltd: '1.1',
         lng: '2.2'
       })
@@ -70,6 +72,7 @@ describe('GET /checkins for creating location and user entries', function(){
           expect(user.locations.length).to.eql(1);
           expect(user.locations[0].ltd).to.eql(1.1);
           expect(user.locations[0].lng).to.eql(2.2);
+          expect(user.locations[0].name).to.eql('Cafe de Paris');
           done();
         });
       });

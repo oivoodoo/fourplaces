@@ -1,7 +1,7 @@
 {
-  "name": "rest-api-express",
-  "version": "0.0.4",
-  "description": "",
+  "name": "foureplaces",
+  "version": "0.0.1",
+  "description": "Test task for making similiar API like foursquare",
   "main": "express.js",
   "scripts": {
     "start": "node express.js",
@@ -9,12 +9,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/azat-co/rest-api-express.git"
+    "url": "https://github.com/oivoodoo/fourplaces.git"
   },
-  "author": "Azat Mardan",
+  "author": "Alexandr Korsak <alex.korsak@gmail.com>",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/azat-co/rest-api-express/issues"
+    "url": "https://github.com/oivoodoo/fourplaces/issues"
   },
   "dependencies": {
     "body-parser": "1.9.2",

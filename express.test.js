@@ -1,80 +1,156 @@
-var superagent = require('superagent')
-var expect = require('expect.js')
+var request = require('supertest');
+var expect = require('expect.js');
 
-describe('express rest api server', function(){
-  var id
+var db = require('./db');
+var mongoose = require('mongoose');
 
-  it('posts an object', function(done){
-    superagent.post('http://localhost:3000/collections/test')
-      .send({ name: 'John'
-        , email: 'john@rpjs.co'
-      })
-      .end(function(e, res){
-        // console.log(res.body)
-        expect(e).to.eql(null)
-        expect(res.body.length).to.eql(1)
-        expect(res.body[0]._id.length).to.eql(24)
-        id = res.body[0]._id
-        done()
-      })
-  })
+var User = require('./models').User;
 
-  it('retrieves an object', function(done){
-    superagent.get('http://localhost:3000/collections/test/'+id)
-      .end(function(e, res){
-        // console.log(res.body)
-        expect(e).to.eql(null)
-        expect(typeof res.body).to.eql('object')
-        expect(res.body._id.length).to.eql(24)
-        expect(res.body._id).to.eql(id)
-        done()
-      })
-  })
+var app = require('./express');
 
-  it('retrieves a collection', function(done){
-    superagent.get('http://localhost:3000/collections/test')
-      .end(function(e, res){
-        // console.log(res.body)
-        expect(e).to.eql(null)
-        expect(res.body.length).to.be.above(0)
-        expect(res.body.map(function (item){return item._id})).to.contain(id)
-        done()
-      })
-  })
+describe('GET /checkins for creating location and user entries', function(){
+  beforeEach(function(done) {
+    db.connect('test', function() {
+      mongoose.connection.collections['users'].drop(function () {
+        done();
+      });
+    });
+  });
 
-  it('updates an object', function(done){
-    superagent.put('http://localhost:3000/collections/test/'+id)
-      .send({name: 'Peter'
-        , email: 'peter@yahoo.com'})
-      .end(function(e, res){
-        // console.log(res.body)
-        expect(e).to.eql(null)
-        expect(typeof res.body).to.eql('object')
-        expect(res.body.msg).to.eql('success')
-        done()
+  it('should create new user for username on checkin', function(done){
+    request(app)
+      .get('/checkin')
+      .query({
+        username: 'kate',
+        ltd: '1.1',
+        lng: '2.2'
       })
-  })
+      .end(function(e, response){
+        if (e) {
+          console.log(e);
+          return;
+        }
 
-  it('checks an updated object', function(done){
-    superagent.get('http://localhost:3000/collections/test/'+id)
-      .end(function(e, res){
-        // console.log(res.body)
-        expect(e).to.eql(null)
-        expect(typeof res.body).to.eql('object')
-        expect(res.body._id.length).to.eql(24)
-        expect(res.body._id).to.eql(id)
-        expect(res.body.name).to.eql('Peter')
-        done()
+        expect(response.status).to.eql(200);
+
+        User.count(function(err, count) {
+          if (err) {
+            console.log(err);
+            return;
+          }
+
+          expect(count).to.eql(1);
+          done();
+        });
+      });
+  });
+
+  it('should create location for new user', function(done){
+    request(app)
+      .get('/checkin')
+      .query({
+        username: 'kate',
+        ltd: '1.1',
+        lng: '2.2'
       })
-  })
-  it('removes an object', function(done){
-    superagent.del('http://localhost:3000/collections/test/'+id)
-      .end(function(e, res){
-        // console.log(res.body)
-        expect(e).to.eql(null)
-        expect(typeof res.body).to.eql('object')
-        expect(res.body.msg).to.eql('success')
-        done()
+      .end(function(e, response){
+        if (e) {
+          console.log(e);
+          return;
+        }
+
+        expect(response.status).to.eql(200);
+
+        User.findOne(function(err, user) {
+          if (err) {
+            console.log(err);
+            return;
+          }
+
+          expect(user.locations.length).to.eql(1);
+          expect(user.locations[0].ltd).to.eql(1.1);
+          expect(user.locations[0].lng).to.eql(2.2);
+          done();
+        });
+      });
+  });
+
+  it('should not create multiple users for the same username', function(done){
+    request(app)
+      .get('/checkin')
+      .query({
+        username: 'kate',
+        ltd: '1.1',
+        lng: '2.2'
       })
-  })
-})
+      .end(function(e, response){
+        if (e) {
+          console.log(e);
+          return;
+        }
+
+        request(app)
+          .get('/checkin')
+          .query({
+            username: 'kate',
+            ltd: '1.1',
+            lng: '2.2'
+          })
+          .end(function(e, response){
+
+            User.count(function(err, count) {
+              if (err) {
+                console.log(err);
+                return;
+              }
+
+              expect(count).to.eql(1);
+              done();
+            });
+          });
+      });
+  });
+
+
+  it('should require to have username', function(done){
+    request(app)
+      .get('/checkin')
+      .query({
+        ltd: '1.1',
+        lng: '2.2'
+      })
+      .expect(400)
+      .end(function(err, res){
+        if (err) throw err;
+        done();
+      });
+  });
+
+  it('should require to have lng', function(done){
+    request(app)
+      .get('/checkin')
+      .query({
+        username: 'kate',
+        ltd: '1.1'
+      })
+      .expect(400)
+      .end(function(err, res){
+        if (err) throw err;
+        done();
+      });
+  });
+
+  it('should require to have ltd', function(done){
+    request(app)
+      .get('/checkin')
+      .query({
+        username: 'kate',
+        lng: '2.2'
+      })
+      .expect(400)
+      .end(function(err, res){
+        if (err) throw err;
+        done();
+      });
+  });
+});

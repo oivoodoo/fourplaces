@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(logger('dev'));
 
-app.use(function requireParams(request, response, next) {
+app.use('/checkin', function requireParams(request, response, next) {
   if (!request.query.username || !request.query.lng || !request.query.ltd) {
     response.status(400).end();
   } else {
@@ -62,6 +62,18 @@ app.get('/checkin', function(request, response, next) {
 
     response.send(200);
   });
+});
+
+app.use('/locations', function requireParams(request, response, next) {
+  if (!request.query.username) {
+    response.status(400).end();
+  } else {
+    next();
+  }
+});
+
+app.get('/locations', function(request, response, next) {
+  response.json(request.user.locations);
 });
 
 app.listen(process.env.PORT || 3000, function() {

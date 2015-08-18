@@ -154,3 +154,53 @@ describe('GET /checkins for creating location and user entries', function(){
       });
   });
 });
+
+describe('GET /locations for getting locations by username', function(){
+  beforeEach(function(done) {
+    db.connect('test', function() {
+      mongoose.connection.collections['users'].drop(function () {
+        done();
+      });
+    });
+  });
+
+  it('should get the list of the locations', function(done){
+    var user = new User({ username: 'kate' });
+    user.save(function(err, user) {
+      user.createLocation({
+        lng: 1.1,
+        ltd: 2.2
+      }, function(err) {
+        request(app)
+          .get('/locations')
+          .query({ username: 'kate' })
+          .end(function(e, response){
+            if (e) {
+              console.log(e);
+              return;
+            }
+
+            expect(response.status).to.eql(200);
+
+            var locations = response.body;
+            expect(locations.length).to.eql(1);
+            expect(locations[0].lng).to.eql(1.1);
+            expect(locations[0].ltd).to.eql(2.2);
+
+            done();
+          });
+      });
+    });
+  });
+
+  it('should require to have username', function(done){
+    request(app)
+      .get('/locations')
+      .expect(400)
+      .end(function(err, res){
+        if (err) throw err;
+
+        done();
+      });
+  });
+});

@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 DB_CONNECTIONS = {
   test: 'mongodb://localhost/fourplaces-test',
   development: 'mongodb://localhost/fourplaces-develoment',
-  production: process.env.MONGODB_URL
+  production: process.env.MONGODB_URL || process.env.MONGOLAB_URI
 };
 
 function connect(env, callback) {
